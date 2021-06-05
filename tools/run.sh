@@ -7,7 +7,7 @@
 # Another version with 32-bits
 ###
 COMP_MODE="Debug"
-LLVM_BIN="$HOME/SvnReps/UNIMELB/trunk/verification/domains/code/wrapped-intervals/.llvm-svn/build/$COMP_MODE/bin"
+LLVM_BIN="${LLVM_ROOT}/llvm/build/$COMP_MODE/bin"
 CLANG_PATH=$LLVM_BIN
 OPT_PATH=$LLVM_BIN
 ###
@@ -278,7 +278,8 @@ if [ "$MYLIBRARIES" == "" ]; then
     exit 2
 fi
     
-if [ -e $abspath_BC ]; then	 
+if [ -e $abspath_BC ]; then
+    echo "Running LLVM pass : ${mypass}"
     $OPT $MYLIBRARIES $PRE_MYPASS $ALIAS_OPTS $mypass $MYPASS_OPTS $GENERAL_OPTS $abspath_BC > /dev/null
 else
     echo -e "[run-llvm]: .bc file not found.\n"

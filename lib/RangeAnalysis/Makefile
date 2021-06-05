@@ -6,7 +6,7 @@ LIBRARYNAME=RangeAnalysis
 
 LOADABLE_MODULE=1
 
-SOURCES= BaseRange.cpp Range.cpp RangePass.cpp WrappedRange.cpp
+SOURCES= BaseRange.cpp Range.cpp RangeSynth.cpp RangePass.cpp WrappedRange.cpp
 
 include $(LEVEL)/Makefile.options
 include $(LEVEL)/Makefile.common
