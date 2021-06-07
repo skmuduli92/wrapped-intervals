@@ -47,13 +47,10 @@ namespace unimelb {
   class RangeSynth;
   typedef std::tr1::shared_ptr<RangeSynth>  RangeSynthPtr;
 
-  /// Widening technique.
-  typedef enum {NOWIDEN = 10, COUSOT76 = 11, JUMPSET = 12} WideningOpts;
-  const WideningOpts  WideningMethod = JUMPSET; 
 
   class RangeSynth: public BaseRange {  
   public:          
-    virtual BaseId getValueID() const { return RangeId; }
+    virtual BaseId getValueID() const { return RangeSynthId; }
 
     /// Constructor of the class.
     /// Creates a new object from a Value.
@@ -114,10 +111,10 @@ namespace unimelb {
       return true; 
     }
     static inline bool classof(const BaseRange *V) {
-      return (V->getValueID() == RangeId);
+      return (V->getValueID() == RangeSynthId);
     }
     static inline bool classof(const AbstractValue *V) {
-      return (V->getValueID() == RangeId);
+      return (V->getValueID() == RangeSynthId);
     }
 
     /// Destructor of the class.

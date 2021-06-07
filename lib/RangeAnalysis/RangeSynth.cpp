@@ -12,7 +12,8 @@
 #include "RangeSynth.h"
 
 #include <algorithm> // std::min_element, std::max_element
- 
+#include "Range.h"
+
 //#define DEBUG_TYPE "RangeAnalysis"
 //#define DEBUG_CAST_OP
 
@@ -117,11 +118,11 @@ void RangeSynth::makeBot() {
 
 
 bool RangeSynth::IsTop() const  { 
-  return RangeSynth::IsTop();
+  return BaseRange::IsTop();
 }
 
 void RangeSynth::makeTop() { 
-  RangeSynth::makeTop();
+  BaseRange::makeTop();
 }
 
 

@@ -33,7 +33,8 @@ namespace unimelb {
   /// Hierarchy members that can be instantiated
   typedef enum {    
     RangeId               = 0, //!< classical range analysis.
-    WrappedRangeId        = 1  //!< wrapped range analysis.
+    WrappedRangeId        = 1,  //!< wrapped range analysis.
+    RangeSynthId               = 2 //!< classical range analysis.
   } BaseId ;
 
   /// Class that represents an abstract value.

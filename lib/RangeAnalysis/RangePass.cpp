@@ -10,6 +10,7 @@
 #include "FixpointSSI.h"
 #include "Transformations/vSSA.h"
 #include "Range.h"
+#include "RangeSynth.h"
 #include "WrappedRange.h"
 #include "llvm/Pass.h"
 #include "llvm/PassManager.h"
@@ -262,21 +263,21 @@ namespace unimelb {
 
     // Methods that allows Fixpoint creates Range objects
     virtual AbstractValue* initAbsValBot(Value *V){
-      Range * R = new Range(V,IsSigned);
+      RangeSynth * R = new RangeSynth(V,IsSigned);
       R->makeBot();
       return R;
     }
     virtual AbstractValue* initAbsValTop(Value *V){
-      Range * R = new Range(V,IsSigned);
+      RangeSynth * R = new RangeSynth(V,IsSigned);
       return R;
     }
     virtual AbstractValue* initAbsIntConstant(ConstantInt *C){
-      Range * R = new Range(C, C->getBitWidth(),IsSigned);
+      RangeSynth * R = new RangeSynth(C, C->getBitWidth(),IsSigned);
       return R;
     }
     virtual AbstractValue* initAbsValIntConstant(Value *V, ConstantInt *C){
-      Range * RV = new Range(V,IsSigned);
-      Range RC(C, C->getBitWidth(), IsSigned);
+      RangeSynth * RV = new RangeSynth(V,IsSigned);
+      RangeSynth RC(C, C->getBitWidth(), IsSigned);
       RV->makeBot();
       RV->join(&RC);      
       return RV;
@@ -849,23 +850,49 @@ namespace unimelb {
   static RegisterPass<runIOC> 
   RunIOC("ioc-stats", "Run IOC experiment.", false, false);
 
+  // RangePass synth
+  struct RangeSynthPass : public ModulePass{
+    static char ID; //!< Pass identification, replacement for typeid    
+    RangeSynthPass() : ModulePass(ID) {}
+    virtual bool runOnModule(Module &M){
+
+      AliasAnalysis *AA = &getAnalysis<AliasAnalysis>(); 
+      CallGraph     *CG = &getAnalysis<CallGraph>();
+      
+      dbgs() <<"\n===-------------------------------------------------------------------------===\n" ;  
+      dbgs() << "               Range Integer Variable Analysis \n";
+      dbgs() <<"===-------------------------------------------------------------------------===\n" ;      
+      RangeAnalysis a(&M, widening , narrowing , AA, SIGNED_RANGE_ANALYSIS);
+      runAnalysis(M,CG,a);
+      return false;
+    }
+
+    virtual void getAnalysisUsage(AnalysisUsage& AU) const {
+      RangePassRequirements(AU);
+    }    
+  };
+
+  char RangeSynthPass::ID = 0;
+  static RegisterPass<RangeSynthPass> RPS("rangesynth-analysis",
+					 "Fixed-Width Integer Range Analysis",
+				    false,false);
 
 
   /// This class runs -range-analysis and -wrapped-range-analysis
   /// passes and gather some numbers regarding precision.
-  class runPrecComparisonWrSynth : public ModulePass{
+  class runPrecComparisonUWrSynth : public ModulePass{
   public:
     // Pass identification, replacement for typeid    
     static char ID; 
     /// Constructor of the class.
-    runPrecComparisonWrSynth() :  ModulePass(ID), IsAllSigned(SIGNED_RANGE_ANALYSIS),       
+    runPrecComparisonUWrSynth() :  ModulePass(ID), IsAllSigned(SIGNED_RANGE_ANALYSIS),       
 			   NumTotal(0), NumOfSame(0), NumOfDifferent(0), 
 			   NumUnWrappedIsBetter(0), NumWrappedIsBetter1(0), 
 			   NumWrappedIsBetter2(0), 
 			   NumOfIncomparable(0), NumOfTrivial(0){ }
     /// Destructor of the class.
-    ~runPrecComparisonWrSynth(){}
-
+    ~runPrecComparisonUWrSynth(){}
+    
     virtual bool runOnModule(Module &M){
      
       AliasAnalysis *AA = &getAnalysis<AliasAnalysis>(); 
@@ -958,8 +985,7 @@ namespace unimelb {
 	  if (I1 && (!I1->isConstant())){
 	    AbstractValue *AbsVal =UnWrappedSynthMap[B->first];
 	    assert(AbsVal);
-	    // TODO: unwrappedsynth should belong to RangeSynth
-	    Range *I2 = dyn_cast<Range>(AbsVal);
+	    RangeSynth *I2 = dyn_cast<RangeSynth>(AbsVal);
 	    assert(I2);
 	    assert(!I2->isConstant());
 	    compareTwoIntervals(I1,I2, IsAllSigned); 
@@ -968,8 +994,7 @@ namespace unimelb {
       } // end for
     }
 
-    // TODO : change I2 type to rangesynth
-    void compareTwoIntervals(Range *I1, Range* I2, bool isSigned){
+    void compareTwoIntervals(Range *I1, RangeSynth* I2, bool isSigned){
       assert(I1); assert(I1->getWidth() == I2->getWidth());
       assert(I2); assert(I1->getValue() == I2->getValue());
       
@@ -1093,8 +1118,9 @@ namespace unimelb {
    
   }; // end of class runPrecComparisonWrSynth
 
-  char runPrecComparisonWrSynth::ID = 0;
-  static RegisterPass<runPrecComparisonWrSynth> 
+  
+  char runPrecComparisonUWrSynth::ID = 0;
+  static RegisterPass<runPrecComparisonUWrSynth> 
   RunPrecisionSynth("compare-rangesynth-analyses",
 	       "Comparison range-analysis vs rangesynth-analysis.",
 	       false,false);
